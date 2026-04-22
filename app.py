@@ -1,43 +1,32 @@
 import streamlit as st
 import pickle
 import numpy as np
-import sklearn
 
-# Page configuration
-st.set_page_config(page_title="Salary Predictor", layout="centered")
-
-# Display version for debugging
-st.sidebar.write(f"Running scikit-learn version: {sklearn.__version__}")
-
+# Load model
 @st.cache_resource
 def load_model():
-    try:
-        with open('Model.pkl', 'rb') as file:
-            model = pickle.load(file)
-        return model
-    except Exception as e:
-        st.error(f"Error loading model: {e}")
-        return None
+    with open("model.pkl", "rb") as f:
+        return pickle.load(f)
 
 model = load_model()
 
-if model:
-    st.title("💼 Salary Prediction App")
-    st.write("Predict estimated salary based on years of professional experience.")
+st.title("ML Model Deployment")
 
-    # User Input
-    years_exp = st.number_input("Years of Experience", min_value=0.0, max_value=50.0, value=2.0, step=0.5)
+st.write("Enter input data as comma-separated values (example: 1,2,3,4)")
 
-    if st.button("Calculate Prediction"):
-        # The model expects a 2D array (YearsExperience) 
-        input_data = np.array([[years_exp]])
-        
-        try:
-            prediction = model.predict(input_data)
-            # Accessing the first element of the prediction array 
-            st.balloons()
-            st.success(f"### Predicted Salary: ${prediction[0]:,.2f}")
-        except Exception as e:
-            st.error(f"Prediction failed: {e}")
-else:
-    st.warning("Model file could not be loaded. Please check your GitHub repository for 'Model.pkl'.")
+# User input
+user_input = st.text_input("Input Features")
+
+if st.button("Predict"):
+    try:
+        # Convert input string to numpy array
+        input_list = [float(x.strip()) for x in user_input.split(",")]
+        input_array = np.array(input_list).reshape(1, -1)
+
+        # Prediction
+        prediction = model.predict(input_array)
+
+        st.success(f"Prediction: {prediction[0]}")
+
+    except Exception as e:
+        st.error(f"Error: {e}")
